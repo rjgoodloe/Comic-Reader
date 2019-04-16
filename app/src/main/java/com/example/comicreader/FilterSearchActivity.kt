@@ -1,23 +1,18 @@
 package com.example.comicreader
 
-import android.content.DialogInterface
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.chip.Chip
 import android.support.design.chip.ChipGroup
 import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
-import android.text.Editable
-import android.view.MenuItem
 import android.view.View
 import android.widget.*
 import com.example.comicreader.Adapter.MyComicAdapter
 import com.example.comicreader.Common.Common
 import com.example.comicreader.Model.Comic
 import kotlinx.android.synthetic.main.activity_filter_search.*
-import kotlinx.android.synthetic.main.dialog_filter.*
-import java.lang.StringBuilder
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -36,7 +31,7 @@ class FilterSearchActivity : AppCompatActivity() {
 
                 R.id.action_filter -> showOptionsDialog()
                 R.id.action_search -> showSearchDialog()
-                R.id.action_add -> startActivity( Intent(this@FilterSearchActivity, UserUploadedComicActivity::class.java))
+                R.id.action_add -> startActivity( Intent(this@FilterSearchActivity, UploadComicActivity::class.java))
             }
             true
 
