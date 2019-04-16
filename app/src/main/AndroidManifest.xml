@@ -26,9 +26,14 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".UserUploadedComicActivity"/>
-        <activity android:name=".AddChapterActivity"/>
-        <activity android:name=".UploadComicActivity"/>
+
+        <activity android:name=".UserUploadedComicActivity">
+        </activity>
+        <activity android:name=".AddChapterActivity">
+        </activity>
+        <activity android:name=".UploadComicActivity">
+        </activity>
+
     </application>
 
 </manifest>
