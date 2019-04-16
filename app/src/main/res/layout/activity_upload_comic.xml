@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout
-        android:id="@+id/upload_comic_layout"
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/upload_comic_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        xmlns:app="http://schemas.android.com/apk/res-auto">
+        android:layout_height="match_parent">
 
     <EditText
             android:id="@+id/title_field"
@@ -37,8 +37,6 @@
             android:backgroundTint="@color/colorLightGray"
             android:textAllCaps="false"/>
 
-
-
     <TextView
             android:id="@+id/chapter"
             android:layout_width="wrap_content"
@@ -54,7 +52,7 @@
     <LinearLayout
             android:id="@+id/wrapper"
             android:layout_width="match_parent"
-            android:layout_height="600dp"
+            android:layout_height="450dp"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="12dp"
             android:orientation="vertical"
@@ -71,6 +69,17 @@
         />
 
     </LinearLayout>
+
+    <Button
+            android:id="@+id/button_done"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/wrapper"
+            android:backgroundTint="@color/colorLightGray"
+            android:text="Finished"
+    />
 
 
 </android.support.constraint.ConstraintLayout>

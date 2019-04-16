@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity(), IBannerLoadDoneListener, IComicLoadDon
     override fun onComicLoadDoneListener(comicList: List<Comic>) {
         alertDialog.dismiss()
 
-        Common.comicList = comicList;
+        Common.comicList = comicList
         recycler_comic.adapter = MyComicAdapter(baseContext,comicList)
         txt_comic.text = StringBuilder("NEW COMIC (")
             .append(comicList.size)

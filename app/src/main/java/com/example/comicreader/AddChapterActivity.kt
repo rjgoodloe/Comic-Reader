@@ -18,10 +18,17 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.Toast
+import com.example.comicreader.Model.Chapter
+import com.google.android.gms.tasks.Continuation
+import com.google.android.gms.tasks.OnSuccessListener
+import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.UploadTask
 import kotlinx.android.synthetic.main.activity_add_chapter.*
+import kotlinx.android.synthetic.main.activity_add_chapter.button_done
+import kotlinx.android.synthetic.main.activity_upload_comic.*
 import kotlinx.android.synthetic.main.image_list_item.view.*
 import java.io.IOException
 import java.util.*
@@ -39,6 +46,7 @@ class AddChapterActivity : AppCompatActivity() {
     private var adapter = ImageListAdapter()
     private var upload = false
     private var cover = false
+    private lateinit var _chapter: Chapter
 
 
     private val imageRequest = 71
@@ -49,12 +57,21 @@ class AddChapterActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_add_chapter)
 
-        if (intent!!.extras!!.containsKey("Title")) {
-            _title = intent!!.extras!!.getString("Title")
-        } else {
-            _title = intent!!.extras!!.getString("Cover")
-            chapter_title.visibility = View.INVISIBLE
-            cover = true
+        _chapter = Chapter()
+        Log.e("ADD", "OnCreate")
+        when {
+            intent!!.extras!!.containsKey("CHAPTER") -> {
+                _title = intent!!.extras!!.getString("TITLE")
+                _chapterTitle = intent!!.extras!!.getString("CHAPTER")
+            }
+            intent!!.extras!!.containsKey("COVER") -> {
+                _title = intent!!.extras!!.getString("COVER")
+                chapter_title.visibility = View.INVISIBLE
+                cover = true
+            }
+            else -> {
+                _title = intent!!.extras!!.getString("TITLE")
+            }
         }
 
         storage = FirebaseStorage.getInstance()
@@ -62,19 +79,20 @@ class AddChapterActivity : AppCompatActivity() {
         fab.setOnClickListener { chooseImage() }
         button_upload.setOnClickListener {
             for (image in imageList) {
+
                 uploadImage(image)
             }
         }
         button_done.setOnClickListener {
             val intent = Intent(this, UploadComicActivity::class.java)
             if (upload) {
-                if(cover){
-                    intent.putExtra("COVER", "cover")
+                if (cover) {
+                    intent.putExtra("COVER", _chapter)
                     setResult(RESULT_OK, intent)
                     finish()
-                    }
-                _chapterTitle = chapter_title.text.toString()
-                intent.putExtra("CHAPTER", _chapterTitle)
+                }
+                _chapter.name = chapter_title.text.toString()
+                intent.putExtra("CHAPTER", _chapter)
                 Log.e("Add Chapter", _chapterTitle)
                 setResult(RESULT_OK, intent)
                 finish()
@@ -101,6 +119,7 @@ class AddChapterActivity : AppCompatActivity() {
         })
         touchHelper.attachToRecyclerView(image_list)
     }
+
 
     override fun onStart() {
         super.onStart()
@@ -136,7 +155,8 @@ class AddChapterActivity : AppCompatActivity() {
         progressDialog.show()
 
         val ref = storageReference!!.child("$_title/$_chapterTitle/" + imageList.indexOf(filePath))
-        ref.putFile(filePath)
+
+        val uploadTask = ref.putFile(filePath)
             .addOnSuccessListener {
                 progressDialog.dismiss()
                 Toast.makeText(this, "Uploaded", Toast.LENGTH_SHORT).show()
@@ -151,6 +171,22 @@ class AddChapterActivity : AppCompatActivity() {
                 progressDialog.setMessage("Uploaded " + progress.toInt() + "%")
             }
 
+        val urlTask = uploadTask.continueWithTask(Continuation<UploadTask.TaskSnapshot, Task<Uri>> { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let {
+                    throw it
+                }
+            }
+            return@Continuation ref.downloadUrl
+        }).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val downloadUri = task.result
+                _chapter.links!!.add(downloadUri.toString())
+            } else {
+                // Handle failures
+                // ...
+            }
+        }
 
     }
 

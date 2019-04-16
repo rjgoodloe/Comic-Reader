@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1055440020496-h9nu08dah7ti8cp4us8nhaklchoerhck.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.comicreader",
+            "certificate_hash": "820f1c2570d8acb1acdfe33732f0dff02fc02f53"
+          }
+        },
+        {
           "client_id": "1055440020496-4hcokikjmmsirq2eveiv24vkpmesrfm3.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -25,15 +33,13 @@
         }
       ],
       "services": {
-        "analytics_service": {
-          "status": 1
-        },
         "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
-        },
-        "ads_service": {
-          "status": 2
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1055440020496-4hcokikjmmsirq2eveiv24vkpmesrfm3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

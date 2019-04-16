@@ -28,7 +28,7 @@ class MyChapterAdapter(internal var context: Context,
     }
 
     override fun onBindViewHolder(p0: MyViewHolder, p1: Int) {
-        p0.txt_chapter_number.text = StringBuilder(chapterList[p1].Name)
+        p0.txt_chapter_number.text = StringBuilder(chapterList[p1].name)
 
         p0.setClick(object  : IRecyclerClick{
             override fun onClick(view: View, position: Int) {
