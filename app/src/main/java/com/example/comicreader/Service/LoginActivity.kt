@@ -33,7 +33,7 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
         mAuth = FirebaseAuth.getInstance()
         btLogin.setOnClickListener{
-            signIn(fieldEmail.text.toString(), fieldPassword.text.toString())
+            signIn(email_field.text.toString(), password_field.text.toString())
         }
         mRegisterTv.setOnClickListener {
             startActivity(Intent(this@LoginActivity,RegisterActivity::class.java))
@@ -50,20 +50,20 @@ class LoginActivity : AppCompatActivity() {
     private fun validateForm(): Boolean {
         var valid = true
 
-        val email = fieldEmail.text.toString()
+        val email = email_field.text.toString()
         if (TextUtils.isEmpty(email)) {
-            fieldEmail.error = "Required."
+            email_field.error = "Required."
             valid = false
         } else {
-            fieldEmail.error = null
+            email_field.error = null
         }
 
-        val password = fieldPassword.text.toString()
+        val password = password_field.text.toString()
         if (TextUtils.isEmpty(password)) {
-            fieldPassword.error = "Required."
+            password_field.error = "Required."
             valid = false
         } else {
-            fieldPassword.error = null
+            password_field.error = null
         }
 
         return valid

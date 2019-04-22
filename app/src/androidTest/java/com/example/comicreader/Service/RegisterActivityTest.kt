@@ -13,17 +13,16 @@ import org.junit.Test
 class RegisterActivityTest {
     @get:Rule
     var activityTestRule = ActivityTestRule(RegisterActivity::class.java)
-    var mActivity = activityTestRule.activity
+    private var mActivity = activityTestRule.activity
 
     @Before
     fun setUp() {
     }
 
     @Test
-    fun LayoutTest()
+    fun layoutTest()
     {
-        var view : View
-        view = mActivity.findViewById(R.id.linearLayout1)
+        val view : View = mActivity.findViewById(R.id.linearLayout1)
         assertNotNull(view)
     }
     @After

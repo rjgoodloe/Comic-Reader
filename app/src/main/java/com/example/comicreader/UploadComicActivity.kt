@@ -1,7 +1,6 @@
 package com.example.comicreader
 
 import android.app.Activity
-import android.arch.lifecycle.MutableLiveData
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -27,35 +26,25 @@ class UploadComicActivity : AppCompatActivity() {
     private var chapterList: MutableList<String> = ArrayList()
     private var adapter = ButtonListAdapter()
     private var _comic = Comic()
-    lateinit var comic_ref : DatabaseReference
-    lateinit var count_ref : DatabaseReference
+    lateinit var comicRef: DatabaseReference
+    lateinit var countRef: DatabaseReference
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_upload_comic)
 
-
-        comic_ref = FirebaseDatabase.getInstance().getReference("Comic")
-        count_ref = FirebaseDatabase.getInstance().getReference("Count")
+        comicRef = FirebaseDatabase.getInstance().getReference("Comic")
+        countRef = FirebaseDatabase.getInstance().getReference("Count")
 
         cover.setOnClickListener {
             val intent = Intent(this@UploadComicActivity, AddChapterActivity::class.java)
             intent.putExtra("COVER", title_field.text.toString())
             this@UploadComicActivity.startActivityForResult(intent, requestCode)
         }
-        button_done.setOnClickListener {writeNewComic() }
+        button_done.setOnClickListener { writeNewComic() }
 
     }
-
-
-
-    private fun addNewChapterButton() {
-        chapterList.add(getString(R.string.new_chapter))
-        adapter.notifyDataSetChanged()
-    }
-
-
 
     override fun onStart() {
         super.onStart()
@@ -67,20 +56,26 @@ class UploadComicActivity : AppCompatActivity() {
         }
     }
 
-    private fun writeNewComic(){
-        count_ref.addListenerForSingleValueEvent(object : ValueEventListener {
+    private fun addNewChapterButton() {
+        chapterList.add(getString(R.string.new_chapter))
+        adapter.notifyDataSetChanged()
+    }
+
+
+    private fun writeNewComic() {
+        countRef.addListenerForSingleValueEvent(object : ValueEventListener {
 
 
             override fun onCancelled(p0: DatabaseError) {
-                Toast.makeText(this@UploadComicActivity, ""+p0.message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@UploadComicActivity, "" + p0.message, Toast.LENGTH_SHORT).show()
             }
 
             override fun onDataChange(p0: DataSnapshot) {
 
                 var count = p0.value as Long
                 ++count
-                comic_ref.child("$count").setValue(_comic)
-                count_ref.setValue(count)
+                comicRef.child("$count").setValue(_comic)
+                countRef.setValue(count)
             }
         })
     }
@@ -89,14 +84,14 @@ class UploadComicActivity : AppCompatActivity() {
         if (request_code == requestCode) {
             if (resultCode == Activity.RESULT_OK) {
                 if (data!!.extras!!.containsKey("CHAPTER")) {
-                    val chapter = data!!.extras!!.getSerializable("CHAPTER") as Chapter
+                    val chapter = data.extras!!.getSerializable("CHAPTER") as Chapter
                     chapterList[chapterList.size - 1] = chapter.name as String
                     Log.e("Upload1", _comic.Chapters.toString())
                     _comic.Chapters!!.add(chapter)
                     addNewChapterButton()
                 } else {
-                    cover.text = "Cover Added"
-                    val chapter = data!!.extras!!.getSerializable("COVER") as Chapter
+                    cover.text = getString(R.string.cover_added)
+                    val chapter = data.extras!!.getSerializable("COVER") as Chapter
                     _comic.Image = chapter.links?.get(0)
                 }
 
@@ -108,11 +103,11 @@ class UploadComicActivity : AppCompatActivity() {
 
     }
 
-
     private fun validateForm(): Boolean {
         var valid = true
 
         val title = title_field.text.toString()
+        val category = category_field.text.toString()
         if (TextUtils.isEmpty(title)) {
             title_field.error = "Required."
             valid = false
@@ -121,6 +116,9 @@ class UploadComicActivity : AppCompatActivity() {
         }
 
         _comic.Name = title
+        if (!TextUtils.isEmpty(category)) {
+            _comic.Category = category
+        }
 
         return valid
     }
@@ -145,7 +143,7 @@ class UploadComicActivity : AppCompatActivity() {
                 p0.button.text = chapterList[p1]
                 p0.button.setOnClickListener {
                     val intent = Intent(this@UploadComicActivity, AddChapterActivity::class.java)
-                    intent.putExtra("CHAPTER", chapterList[p1])
+                    intent.putExtra("CHAPTER", _comic.Chapters!![p1])
                     intent.putExtra("TITLE", title_field.text.toString())
                     this@UploadComicActivity.startActivityForResult(intent, requestCode)
                 }

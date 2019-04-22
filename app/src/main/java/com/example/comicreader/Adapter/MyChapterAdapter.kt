@@ -2,7 +2,6 @@ package com.example.comicreader.Adapter
 
 import android.content.Context
 import android.content.Intent
-import android.support.v7.view.menu.ActionMenuItemView
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -13,8 +12,6 @@ import com.example.comicreader.Interface.IRecyclerClick
 import com.example.comicreader.Model.Chapter
 import com.example.comicreader.R
 import com.example.comicreader.ViewComicActivity
-import kotlinx.android.synthetic.main.chapter_item.view.*
-import java.lang.StringBuilder
 
 class MyChapterAdapter(internal var context: Context,
                        internal var chapterList: List<Chapter>):RecyclerView.Adapter<MyChapterAdapter.MyViewHolder>() {
@@ -28,7 +25,7 @@ class MyChapterAdapter(internal var context: Context,
     }
 
     override fun onBindViewHolder(p0: MyViewHolder, p1: Int) {
-        p0.txt_chapter_number.text = StringBuilder(chapterList[p1].name)
+        p0.txt_chapter_number.text = StringBuilder(chapterList[p1].name!!)
 
         p0.setClick(object  : IRecyclerClick{
             override fun onClick(view: View, position: Int) {

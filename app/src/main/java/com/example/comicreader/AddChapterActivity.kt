@@ -3,43 +3,53 @@ package com.example.comicreader
 import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Intent
+import android.database.Cursor
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.StrictMode
 import android.provider.MediaStore
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
+import android.text.Editable
 import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.ProgressBar
 import android.widget.Toast
+import com.bumptech.glide.Glide
 import com.example.comicreader.Model.Chapter
+import com.firebase.ui.storage.images.FirebaseImageLoader
 import com.google.android.gms.tasks.Continuation
-import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.StorageTask
 import com.google.firebase.storage.UploadTask
 import kotlinx.android.synthetic.main.activity_add_chapter.*
 import kotlinx.android.synthetic.main.activity_add_chapter.button_done
 import kotlinx.android.synthetic.main.activity_upload_comic.*
 import kotlinx.android.synthetic.main.image_list_item.view.*
+import kotlinx.android.synthetic.main.view_pager_item.*
+import java.io.BufferedInputStream
 import java.io.IOException
+import java.net.URL
+import java.net.URLConnection
 import java.util.*
 
 
-class AddChapterActivity : AppCompatActivity() {
+class AddChapterActivity : AppCompatActivity(), View.OnClickListener {
 
 
     //Firebase
-    private var storage: FirebaseStorage? = null
-    private var storageReference: StorageReference? = null
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
+    private val storageReference: StorageReference = storage.reference
     private var _title: String? = null
     private var _chapterTitle: String? = null
     private var imageList: MutableList<Uri> = ArrayList()
@@ -49,20 +59,33 @@ class AddChapterActivity : AppCompatActivity() {
     private lateinit var _chapter: Chapter
 
 
-    private val imageRequest = 71
+    private val imageRequest = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
 
+        val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+
+        StrictMode.setThreadPolicy(policy)
+
         setContentView(R.layout.activity_add_chapter)
+
 
         _chapter = Chapter()
         Log.e("ADD", "OnCreate")
         when {
             intent!!.extras!!.containsKey("CHAPTER") -> {
                 _title = intent!!.extras!!.getString("TITLE")
-                _chapterTitle = intent!!.extras!!.getString("CHAPTER")
+
+                _chapter = intent!!.extras!!.getSerializable("CHAPTER") as Chapter
+                //chapter_title.text = _chapter.name
+                for (string in _chapter.links!!) {
+                    imageList.add(Uri.parse(string))
+                    adapter.notifyDataSetChanged()
+                }
+                Log.e("ImageList", imageList[0].toString())
+
             }
             intent!!.extras!!.containsKey("COVER") -> {
                 _title = intent!!.extras!!.getString("COVER")
@@ -74,36 +97,15 @@ class AddChapterActivity : AppCompatActivity() {
             }
         }
 
-        storage = FirebaseStorage.getInstance()
-        storageReference = storage!!.reference
-        fab.setOnClickListener { chooseImage() }
-        button_upload.setOnClickListener {
-            for (image in imageList) {
 
-                uploadImage(image)
-            }
-        }
-        button_done.setOnClickListener {
-            val intent = Intent(this, UploadComicActivity::class.java)
-            if (upload) {
-                if (cover) {
-                    intent.putExtra("COVER", _chapter)
-                    setResult(RESULT_OK, intent)
-                    finish()
-                }
-                _chapter.name = chapter_title.text.toString()
-                intent.putExtra("CHAPTER", _chapter)
-                Log.e("Add Chapter", _chapterTitle)
-                setResult(RESULT_OK, intent)
-                finish()
-            }
 
-            setResult(Activity.RESULT_CANCELED, intent)
-            finish()
-        }
+        fab.setOnClickListener(this)
+        button_done.setOnClickListener(this)
+        button_upload.setOnClickListener(this)
 
         val touchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-            ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
         ) {
             override fun onMove(p0: RecyclerView, p1: RecyclerView.ViewHolder, p2: RecyclerView.ViewHolder): Boolean {
                 val sourcePosition = p1.adapterPosition
@@ -114,7 +116,8 @@ class AddChapterActivity : AppCompatActivity() {
             }
 
             override fun onSwiped(p0: RecyclerView.ViewHolder, p1: Int) {
-                // DO NOTHING
+                imageList.removeAt(p0.adapterPosition)
+                adapter.notifyItemRemoved(p0.adapterPosition)
             }
         })
         touchHelper.attachToRecyclerView(image_list)
@@ -130,6 +133,7 @@ class AddChapterActivity : AppCompatActivity() {
     private fun chooseImage() {
         val intent = Intent()
         intent.type = "image/*"
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         intent.action = Intent.ACTION_GET_CONTENT
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), imageRequest)
     }
@@ -137,10 +141,19 @@ class AddChapterActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == imageRequest && resultCode == Activity.RESULT_OK
-            && data != null && data.data != null
         ) {
-            imageList.add(data.data!!)
-            adapter.notifyDataSetChanged()
+
+            if(data!!.clipData != null) {
+                val clipData = data.clipData!!
+                for (i in 0 until clipData.itemCount) {
+                    imageList.add(clipData.getItemAt(i).uri)
+                    adapter.notifyDataSetChanged()
+                }
+            } else{
+                imageList.add(data.data!!)
+                adapter.notifyDataSetChanged()
+
+            }
         }
     }
 
@@ -154,9 +167,9 @@ class AddChapterActivity : AppCompatActivity() {
         progressDialog.setTitle("Uploading...")
         progressDialog.show()
 
-        val ref = storageReference!!.child("$_title/$_chapterTitle/" + imageList.indexOf(filePath))
+        val ref = storageReference.child("$_title/$_chapterTitle/" + imageList.indexOf(filePath))
 
-        val uploadTask = ref.putFile(filePath)
+        val uploadTask: StorageTask<UploadTask.TaskSnapshot> = ref.putFile(filePath)
             .addOnSuccessListener {
                 progressDialog.dismiss()
                 Toast.makeText(this, "Uploaded", Toast.LENGTH_SHORT).show()
@@ -171,7 +184,7 @@ class AddChapterActivity : AppCompatActivity() {
                 progressDialog.setMessage("Uploaded " + progress.toInt() + "%")
             }
 
-        val urlTask = uploadTask.continueWithTask(Continuation<UploadTask.TaskSnapshot, Task<Uri>> { task ->
+        uploadTask.continueWithTask(Continuation<UploadTask.TaskSnapshot, Task<Uri>> { task ->
             if (!task.isSuccessful) {
                 task.exception?.let {
                     throw it
@@ -201,13 +214,42 @@ class AddChapterActivity : AppCompatActivity() {
             chapter_title.error = null
         }
 
-
-
         return valid
     }
 
+    override fun onClick(view: View) {
+        when (view.id) {
+            R.id.button_done -> {
+                val intent = Intent(this, UploadComicActivity::class.java)
+                if (upload) {
+                    if (cover) {
+                        intent.putExtra("COVER", _chapter)
+                        setResult(RESULT_OK, intent)
+                        finish()
+                    }
+                    _chapter.name = chapter_title.text.toString()
+                    intent.putExtra("CHAPTER", _chapter)
+                    Log.e("Add Chapter", _chapterTitle)
+                    setResult(RESULT_OK, intent)
+                    finish()
+                }
+
+                setResult(Activity.RESULT_CANCELED, intent)
+                finish()
+            }
+            R.id.fab -> chooseImage()
+            R.id.button_upload -> {
+                for (image in imageList) {
+                    uploadImage(image)
+                }
+            }
+        }
+    }
 
     inner class ImageListAdapter : RecyclerView.Adapter<ImageListAdapter.ImageListViewHolder>() {
+
+        private val BITMAP_DOWNLOAD_REQUEST_CODE = 21
+
         override fun onCreateViewHolder(p0: ViewGroup, p1: Int): ImageListViewHolder {
             val itemView = LayoutInflater.from(p0.context).inflate(R.layout.image_list_item, p0, false)
             return ImageListViewHolder(itemView)
@@ -218,7 +260,8 @@ class AddChapterActivity : AppCompatActivity() {
                 val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageList[p1])
                 p0.pageImg.setImageBitmap(bitmap)
             } catch (e: IOException) {
-                e.printStackTrace()
+                p0.pageImg.setImageBitmap(getImageBitmap(imageList[p1].toString()))
+                Log.e("Catch", "Whoops")
             }
         }
 
@@ -229,6 +272,23 @@ class AddChapterActivity : AppCompatActivity() {
         inner class ImageListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             var pageImg: ImageView = itemView.page_img
         }
+    }
+
+    private fun getImageBitmap(url: String): Bitmap {
+        var bm: Bitmap? = null
+        try {
+            val aURL = URL(url)
+            val conn = aURL.openConnection()
+            conn.connect()
+            val inputStr = conn.getInputStream()
+            val bufInputStr = BufferedInputStream(inputStr)
+            bm = BitmapFactory.decodeStream(bufInputStr)
+            bufInputStr.close()
+            inputStr.close()
+        } catch (e: IOException) {
+            Log.e("GET BM", "Error getting bitmap", e);
+        }
+        return bm as Bitmap
     }
 
 }

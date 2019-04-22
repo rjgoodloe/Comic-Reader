@@ -36,7 +36,7 @@ class ViewComicActivity : AppCompatActivity() {
             }
         }
 
-        fetchLinks(Common.selected_chapter!!)
+        fetchLinks(Common.selected_chapter)
     }
 
     private fun fetchLinks(chapter: Chapter) {
@@ -46,7 +46,7 @@ class ViewComicActivity : AppCompatActivity() {
 
                 val adapter = MyViewPagerAdapter(baseContext, chapter.links!!)
                 view_pager.adapter = adapter
-                txt_chapter_name_view_comic.text = Common.formatString(Common.selected_chapter!!.name!!)
+                txt_chapter_name_view_comic.text = Common.formatString(Common.selected_chapter.name!!)
 
                 //Create book flip anim
                 val bookFlipPageTransformer = BookFlipPageTransformer()

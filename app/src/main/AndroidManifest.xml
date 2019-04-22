@@ -36,8 +36,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".UserUploadedComicActivity">
-        </activity>
         <activity android:name=".AddChapterActivity">
         </activity>
         <activity android:name=".UploadComicActivity">
